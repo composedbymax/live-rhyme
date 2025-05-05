@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rhyming App</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 2rem; background: #f0f0f0; }
+    h1 { text-align: center; color: #333; }
+    #app { max-width: 600px; margin: 0 auto; background: #fff; padding:1.5rem; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,0.1); }
+    input { width: 100%; padding:0.5rem; font-size:1rem; margin-bottom:1rem; border:1px solid #ccc; border-radius:4px; }
+    button { padding:0.5rem 1rem; font-size:1rem; background:#007BFF; color:#fff; border:none; border-radius:4px; cursor:pointer; }
+    button:disabled { background:#aaa; }
+    ul { list-style:none; padding:0; }
+    li { padding:0.25rem 0; border-bottom:1px solid #eee; }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <h1>Rhyming App</h1>
+    <input id="wordInput" placeholder="Enter a word..." />
+    <button id="rhymeBtn" disabled>Find Rhymes</button>
+    <h2 id="resultHeader"></h2>
+    <ul id="results"></ul>
+  </div>
+  <script>
+    let dict = {};
+    let rhymesMap = {};
+    function loadDict() {
+      return fetch('dict.txt')
+        .then(res => res.text())
+        .then(text => {
+          const lines = text.split(/\r?\n/);
+          lines.forEach(line => {
+            if (!line || line.startsWith(';;;')) return;
+            const parts = line.split('  ');
+            if (parts.length < 2) return;
+            const word = parts[0].trim();
+            const phonemes = parts[1].trim().split(' ');
+            dict[word] = phonemes;
+          });
+          buildRhymesMap();
+        });
+    }
+    function getRhymeKey(phonemes) {
+      for (let i = phonemes.length - 1; i >= 0; i--) {
+        if (phonemes[i].match(/[AEIOU].*[1]/)) {
+          return phonemes.slice(i).join(' ');
+        }
+      }
+      return phonemes.join(' ');
+    }
+    function buildRhymesMap() {
+      Object.entries(dict).forEach(([word, phonemes]) => {
+        const key = getRhymeKey(phonemes);
+        if (!rhymesMap[key]) rhymesMap[key] = [];
+        rhymesMap[key].push(word);
+      });
+      rhymeBtn.disabled = false;
+    }
+    function findRhymes(word) {
+      const up = word.toUpperCase();
+      if (!dict[up]) return [];
+      const key = getRhymeKey(dict[up]);
+      return rhymesMap[key].filter(w => w !== up);
+    }
+    const wordInput = document.getElementById('wordInput');
+    const rhymeBtn = document.getElementById('rhymeBtn');
+    const resultsEl = document.getElementById('results');
+    const headerEl = document.getElementById('resultHeader');
+    rhymeBtn.addEventListener('click', () => {
+      const word = wordInput.value.trim();
+      resultsEl.innerHTML = '';
+      headerEl.textContent = '';
+      if (!word) return;
+      const rhymes = findRhymes(word);
+      headerEl.textContent = rhymes.length ? `Rhymes for "${word}":` : `No rhymes found for "${word}".`;
+      rhymes.slice(0, 100).forEach(r => {
+        const li = document.createElement('li');
+        li.textContent = r;
+        resultsEl.appendChild(li);
+      });
+    });
+    wordInput.addEventListener('keyup', e => {
+      if (e.key === 'Enter') rhymeBtn.click();
+    });
+    loadDict().catch(err => alert('Failed to load dict: '+err));
+  </script>
+</body>
+</html>
