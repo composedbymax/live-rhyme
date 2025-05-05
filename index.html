@@ -3,88 +3,157 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Rhyming App</title>
+  <title>Rhyme Finder</title>
   <style>
-    body { font-family: Arial, sans-serif; padding: 2rem; background: #f0f0f0; }
-    h1 { text-align: center; color: #333; }
-    #app { max-width: 600px; margin: 0 auto; background: #fff; padding:1.5rem; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,0.1); }
-    input { width: 100%; padding:0.5rem; font-size:1rem; margin-bottom:1rem; border:1px solid #ccc; border-radius:4px; }
-    button { padding:0.5rem 1rem; font-size:1rem; background:#007BFF; color:#fff; border:none; border-radius:4px; cursor:pointer; }
-    button:disabled { background:#aaa; }
-    ul { list-style:none; padding:0; }
-    li { padding:0.25rem 0; border-bottom:1px solid #eee; }
+    :root {
+      --primary: #4a6fa5;
+      --secondary: #166088;
+      --accent: #4fc1e9;
+      --light: #f8f9fa;
+      --dark: #343a40;
+      --success: #28a745;
+      --warning: #ffc107;
+      --danger: #dc3545;
+      --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      --radius: 8px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: var(--dark); background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); min-height: 100vh; padding: 2rem; }
+    .container { max-width: 1200px; margin: 0 auto; background: white; border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
+    header { background: var(--primary); color: white; padding: 1.5rem; text-align: center; }
+    h1 { font-size: 2rem; margin-bottom: 0.5rem; }
+    .subtitle { font-size: 1rem; opacity: 0.8; }
+    .search-section { padding: 1.5rem; background-color: var(--light); border-bottom: 1px solid #eee; }
+    input { width: 100%; padding: 0.75rem; font-size: 1rem; border: 2px solid #ddd; border-radius: var(--radius); transition: border-color 0.3s; }
+    input:focus { outline: none; border-color: var(--accent); }
+    .results-section { padding: 1.5rem; }
+    .stats { display: flex; justify-content: space-between; margin-bottom: 1rem; font-size: 0.9rem; color: #666; }
+    #results { list-style: none; display: flex; flex-wrap: wrap; gap: 10px; }
+    .rhyme-item { background: var(--light); padding: 0.5rem 1rem; border-radius: 20px; font-size: 1rem; transition: background 0.2s; border: 1px solid #ddd; }
+    .rhyme-item:hover { background: #e9ecef; }
+    .loading { text-align: center; padding: 2rem; }
+    .spinner { border: 4px solid rgba(0, 0, 0, 0.1); border-radius: 50%; border-top: 4px solid var(--primary); width: 40px; height: 40px; margin: 0 auto 1rem; animation: spin 1s linear infinite; }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    .no-results { text-align: center; padding: 2rem; color: #666; }
+    @media (max-width: 768px) { body { padding: 1rem; } input { font-size: 0.9rem; } }
   </style>
 </head>
 <body>
-  <div id="app">
-    <h1>Rhyming App</h1>
-    <input id="wordInput" placeholder="Enter a word..." />
-    <button id="rhymeBtn" disabled>Find Rhymes</button>
-    <h2 id="resultHeader"></h2>
-    <ul id="results"></ul>
+  <div class="container">
+    <header>
+      <h1>Rhyme Finder</h1>
+      <div class="subtitle">Find rhymes for any word</div>
+    </header>
+    <section class="search-section">
+      <input id="wordInput" type="text" placeholder="Enter a word..." autocomplete="off" aria-label="Word to find rhymes for" />
+    </section>
+    <section id="loadingSection" class="loading" style="display:none;">
+      <div class="spinner"></div>
+      <div>Loading dictionary...</div>
+    </section>
+    <section id="resultsSection" class="results-section" style="display:none;">
+      <h2 id="resultHeader">Rhymes for "<span id="searchedWord"></span>"</h2>
+      <div class="stats">
+        <span id="resultCount"></span>
+        <span id="syllableInfo"></span>
+      </div>
+      <ul id="results"></ul>
+      <div id="noResults" class="no-results" style="display:none;"><p>No rhymes found. Try another word?</p></div>
+    </section>
   </div>
   <script>
-    let dict = {};
-    let rhymesMap = {};
+    const wordInput = document.getElementById('wordInput');
+    const resultsEl = document.getElementById('results');
+    const searchedWordEl = document.getElementById('searchedWord');
+    const resultCountEl = document.getElementById('resultCount');
+    const syllableInfoEl = document.getElementById('syllableInfo');
+    const loadingSection = document.getElementById('loadingSection');
+    const resultsSection = document.getElementById('resultsSection');
+    const noResultsEl = document.getElementById('noResults');
+    const limit = 500;
+    let dict = {}, rhymesMap = { exact: {}, relaxed: {} }, syllableCounts = {};
     function loadDict() {
-      return fetch('dict.txt')
-        .then(res => res.text())
+      loadingSection.style.display = 'block';
+      fetch('dict.txt')
+        .then(res => res.ok ? res.text() : Promise.reject(res.status))
         .then(text => {
-          const lines = text.split(/\r?\n/);
-          lines.forEach(line => {
+          text.split(/\r?\n/).forEach(line => {
             if (!line || line.startsWith(';;;')) return;
-            const parts = line.split('  ');
-            if (parts.length < 2) return;
-            const word = parts[0].trim();
-            const phonemes = parts[1].trim().split(' ');
+            const [w, ph] = line.split('  ');
+            if (!ph) return;
+            const word = w.trim(), phonemes = ph.trim().split(' ');
             dict[word] = phonemes;
+            syllableCounts[word] = countSyllables(phonemes);
           });
           buildRhymesMap();
-        });
+          loadingSection.style.display = 'none';
+        })
+        .catch(err => { console.error(err); loadingSection.style.display = 'none'; alert('Failed to load dictionary.'); });
     }
-    function getRhymeKey(phonemes) {
-      for (let i = phonemes.length - 1; i >= 0; i--) {
-        if (phonemes[i].match(/[AEIOU].*[1]/)) {
-          return phonemes.slice(i).join(' ');
-        }
-      }
-      return phonemes.join(' ');
+    function countSyllables(ph) {
+      return ph.filter(p => p.match(/[AEIOU].*[012]/)).length;
+    }
+    function getKey(ph, exact) {
+      let idx = ph.length - 1;
+      while (idx >= 0 && !ph[idx].match(/[AEIOU].*[12]/)) idx--;
+      if (idx < 0) idx = ph.findIndex(p => p.match(/[AEIOU]/));
+      if (idx < 0) return ph.join(' ');
+      return exact ? ph.slice(idx).join(' ') : ph.slice(-3).map(p => p.replace(/[0-9]/g, '')).join(' ');
     }
     function buildRhymesMap() {
-      Object.entries(dict).forEach(([word, phonemes]) => {
-        const key = getRhymeKey(phonemes);
-        if (!rhymesMap[key]) rhymesMap[key] = [];
-        rhymesMap[key].push(word);
+      Object.entries(dict).forEach(([w, ph]) => {
+        if (w.match(/[^A-Z']/)) return;
+        ['exact','relaxed'].forEach(type => {
+          const key = getKey(ph, type === 'exact');
+          const map = rhymesMap[type];
+          (map[key] = map[key]||[]).push(w);
+        });
       });
-      rhymeBtn.disabled = false;
     }
     function findRhymes(word) {
       const up = word.toUpperCase();
       if (!dict[up]) return [];
-      const key = getRhymeKey(dict[up]);
-      return rhymesMap[key].filter(w => w !== up);
+      const ph = dict[up];
+      const perfect = new Set((rhymesMap.exact[getKey(ph,true)]||[]));
+      const near = new Set((rhymesMap.relaxed[getKey(ph,false)]||[]));
+      const both = [
+        ...[...perfect].filter(w => w !== up),
+        ...[...near].filter(w => !perfect.has(w) && w !== up)
+      ];
+      return both.slice(0, limit);
     }
-    const wordInput = document.getElementById('wordInput');
-    const rhymeBtn = document.getElementById('rhymeBtn');
-    const resultsEl = document.getElementById('results');
-    const headerEl = document.getElementById('resultHeader');
-    rhymeBtn.addEventListener('click', () => {
-      const word = wordInput.value.trim();
+    function showResults(list, word) {
       resultsEl.innerHTML = '';
-      headerEl.textContent = '';
-      if (!word) return;
-      const rhymes = findRhymes(word);
-      headerEl.textContent = rhymes.length ? `Rhymes for "${word}":` : `No rhymes found for "${word}".`;
-      rhymes.slice(0, 100).forEach(r => {
+      if (list.length === 0) {
+        noResultsEl.style.display = 'block';
+        resultCountEl.textContent = '0 rhymes found';
+        syllableInfoEl.textContent = syllableCounts[word.toUpperCase()] || '';
+        return;
+      }
+      noResultsEl.style.display = 'none';
+      list.forEach(r => {
         const li = document.createElement('li');
-        li.textContent = r;
+        li.className = 'rhyme-item';
+        li.textContent = r.toLowerCase();
+        li.onclick = () => { navigator.clipboard.writeText(r.toLowerCase()); };
         resultsEl.appendChild(li);
       });
-    });
-    wordInput.addEventListener('keyup', e => {
-      if (e.key === 'Enter') rhymeBtn.click();
-    });
-    loadDict().catch(err => alert('Failed to load dict: '+err));
+      resultCountEl.textContent = `${list.length} rhymes found`;
+      syllableInfoEl.textContent = syllableCounts[word.toUpperCase()] + ' syllables';
+    }
+    function onSearch() {
+      const w = wordInput.value.trim();
+      if (!w) {
+        resultsSection.style.display = 'none';
+        return;
+      }
+      searchedWordEl.textContent = w;
+      resultsSection.style.display = 'block';
+      const rhymes = findRhymes(w);
+      showResults(rhymes, w);
+    }
+    wordInput.addEventListener('input', onSearch);
+    window.addEventListener('DOMContentLoaded', loadDict);
   </script>
 </body>
 </html>
