@@ -8,7 +8,6 @@
 | |_) || |_| |  V V  | |\/| ||  _|  |_||_|
 |_| \_\|_| |_|  |_|  |_|  |_||_____|(_)(_)
 -->
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -93,6 +92,7 @@
       gap: 10px;
     }
     .rhyme-item {
+      position: relative;
       background: var(--sh3);
       padding: 0.5rem 1rem;
       border-radius: 20px;
@@ -103,6 +103,23 @@
       color:var(--t);
     }
     .rhyme-item:hover { background: var(--ph); }
+    .rhyme-item .tooltip {
+      position: absolute;
+      top: -1.5rem;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--sh2);
+      color: white;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.8rem;
+      opacity: 0;
+      transition: opacity 0.2s;
+      pointer-events: none;
+    }
+    .rhyme-item.show-tooltip .tooltip {
+      opacity: 1;
+    }
     .loading, .no-results {
       text-align: center;
       padding: 2rem;
@@ -208,7 +225,6 @@
         });
       });
     }
-
     function findRhymes(word) {
       const up = word.toUpperCase();
       if (!dict[up]) return [];
@@ -248,7 +264,20 @@
         const li = document.createElement('li');
         li.className = 'rhyme-item';
         li.textContent = r.toLowerCase();
-        li.onclick = () => navigator.clipboard.writeText(r.toLowerCase());
+        // append tooltip span
+        const tip = document.createElement('span');
+        tip.className = 'tooltip';
+        tip.textContent = 'Copied!';
+        li.appendChild(tip);
+        li.onclick = async () => {
+          try {
+            await navigator.clipboard.writeText(r.toLowerCase());
+            li.classList.add('show-tooltip');
+            setTimeout(() => li.classList.remove('show-tooltip'), 800);
+          } catch(err) {
+            console.error('Copy failed', err);
+          }
+        };
         resultsEl.appendChild(li);
       });
       resultCountEl.textContent = `${list.length} rhymes found`;
