@@ -43,6 +43,12 @@
       background-color: var(--sh3);
       border-bottom: 1px solid var(--sh2);
     }
+    .search-container {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+      width: 100%;
+    }
     .filters {
       margin-top: 1rem;
       display: flex;
@@ -135,6 +141,40 @@
       animation: spin 1s linear infinite;
     }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    .mic-button {
+      background: var(--sh2);
+      color: white;
+      border: none;
+      border-radius: var(--rd);
+      padding: 0.75rem 1rem;
+      cursor: pointer;
+      transition: background-color 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .mic-button:hover {
+      background: var(--p);
+    }
+    .mic-button.listening {
+      background: #e74c3c;
+      animation: pulse 2s infinite;
+    }
+    .mic-button svg {
+      width: 20px;
+      height: 20px;
+    }
+    .mic-status {
+      font-size: 0.8rem;
+      color: var(--t2);
+      margin-top: 0.5rem;
+      text-align: right;
+    }
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.7); }
+      70% { box-shadow: 0 0 0 10px rgba(231, 76, 60, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0); }
+    }
   </style>
 </head>
 <body>
@@ -144,8 +184,19 @@
       <h1>Live Rhyme</h1>
     </div>
     <section class="search-section">
-      <input id="wordInput" type="text" placeholder="Enter a word..." autocomplete="off"
-             aria-label="Word to find rhymes for" />
+      <div class="search-container">
+        <input id="wordInput" type="text" placeholder="Enter a word..." autocomplete="off"
+               aria-label="Word to find rhymes for" />
+        <button id="micButton" class="mic-button" aria-label="Activate speech recognition">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+            <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+            <line x1="12" y1="19" x2="12" y2="23"></line>
+            <line x1="8" y1="23" x2="16" y2="23"></line>
+          </svg>
+        </button>
+      </div>
+      <div class="mic-status" id="micStatus"></div>
       <div class="filters">
         <label for="sortSelect">Sort by:</label>
         <select id="sortSelect" class="drp">
@@ -184,8 +235,79 @@
     const loadingSection = document.getElementById('loadingSection');
     const resultsSection = document.getElementById('resultsSection');
     const noResultsEl    = document.getElementById('noResults');
+    const micButton      = document.getElementById('micButton');
+    const micStatus      = document.getElementById('micStatus');
     const limit          = 1000;
     let dict = {}, rhymesMap = { exact: {}, relaxed: {} }, syllableCounts = {};
+    let recognition;
+    let isListening = false;
+    function initSpeechRecognition() {
+      if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+        micButton.disabled = true;
+        micStatus.textContent = 'Speech recognition not supported in your browser';
+        return false;
+      }
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      recognition = new SpeechRecognition();
+      recognition.continuous = true;
+      recognition.interimResults = true;
+      recognition.lang = 'en-US';
+      recognition.onstart = () => {
+        isListening = true;
+        micButton.classList.add('listening');
+        micStatus.textContent = 'Listening...';
+      };
+      recognition.onend = () => {
+        if (isListening) {
+          recognition.start();
+        }
+      };
+      recognition.onerror = (event) => {
+        console.error('Speech recognition error', event.error);
+        micStatus.textContent = `Error: ${event.error}`;
+        if (event.error === 'not-allowed') {
+          stopListening();
+        }
+      };
+      recognition.onresult = (event) => {
+        const result = event.results[event.results.length - 1];
+        if (result.isFinal) {
+          const word = result[0].transcript.trim().split(' ').pop();
+          if (word) {
+            wordInput.value = word;
+            onSearch();
+          }
+        }
+      };
+      return true;
+    }
+    function toggleListening() {
+      if (!recognition && !initSpeechRecognition()) {
+        return;
+      }
+      if (isListening) {
+        stopListening();
+      } else {
+        startListening();
+      }
+    }
+    function startListening() {
+      try {
+        recognition.start();
+        isListening = true;
+      } catch (err) {
+        console.error('Failed to start speech recognition', err);
+        micStatus.textContent = 'Failed to start listening';
+      }
+    }
+    function stopListening() {
+      if (recognition) {
+        recognition.stop();
+      }
+      isListening = false;
+      micButton.classList.remove('listening');
+      micStatus.textContent = '';
+    }
     function loadDict() {
       loadingSection.style.display = 'block';
       fetch('dict.txt')
@@ -295,9 +417,13 @@
       rhymes = sortRhymes(rhymes, sortSelect.value);
       showResults(rhymes, w);
     }
+    micButton.addEventListener('click', toggleListening);
     wordInput.addEventListener('input', onSearch);
     sortSelect.addEventListener('change', onSearch);
-    window.addEventListener('DOMContentLoaded', loadDict);
+    window.addEventListener('DOMContentLoaded', () => {
+      loadDict();
+      initSpeechRecognition();
+    });
   </script>
   </main>
 </body>
