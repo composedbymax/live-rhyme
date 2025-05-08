@@ -1,24 +1,41 @@
-# Rhyming App
+```
+ _      ___ __     __ _____ 
+| |    |_ _|\ \   / /| ____|
+| |___  | |  \ \ / / |  _|  
+|_____||___|  \_\_/  |_____|
+ ____   _   _ __   __ __  __  _____  _  _ 
+|  _ \ | | | | \\ // |  \/  || ____|| || |
+| |_) || |_| |  V V  | |\/| ||  _|  |_||_|
+|_| \_\|_| |_|  |_|  |_|  |_||_____|(_)(_)
+```
 
-A simple web-based app that finds rhyming words using a pronunciation dictionary.
+
+
+Created By Max Warren
+
+A simple web app that finds rhymes for words using a phonetic dictionary.
+
+## Features
+
+- Sort results alphabetically or by syllable count
 
 ## How It Works
 
-- The app loads a pronunciation dictionary file (`dict.txt`) in CMU format.
-- When a user inputs a word and clicks the "Find Rhymes" button (or presses Enter), the app:
-  1. Looks up the word's phonemes.
-  2. Identifies the rhyme key (starting from the last stressed vowel sound).
-  3. Finds and displays all other words with the same rhyme key.
+- Loads a CMU Pronouncing Dictionary file (`dict.txt`)
+- Parses phonemes and syllables
+- Matches rhymes using stressed vowel sounds
+- Renders results dynamically in the browser
 
-## How to Use
+## File Structure
 
-1. Make sure `dict.txt` (CMU Pronouncing Dictionary format) is in the same directory as the HTML file.
-2. Open `index.html` (or the HTML file) in a browser.
-3. Type a word into the input field.
-4. Click **Find Rhymes** or press **Enter**.
-5. View a list of rhyming words below.
+- `index.html` – Main app UI and logic
+- `dict.txt` – Required dictionary file (CMU format)
 
-## Requirements
+## Setup
 
-- Modern browser with JavaScript enabled.
-- `dict.txt` file formatted like the CMU Pronouncing Dictionary:
+1. Place `dict.txt` in the same folder as `index.html`
+2. Open `index.html` in a browser with a local sever
+
+## Note
+
+- Works entirely in-browser with one inital network load, no requests per word.

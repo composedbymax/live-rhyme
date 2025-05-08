@@ -1,51 +1,48 @@
+<!--
+ _      ___ __     __ _____ 
+| |    |_ _|\ \   / /| ____|
+| |___  | |  \ \ / / |  _|  
+|_____||___|  \_\_/  |_____|
+ ____   _   _ __   __ __  __  _____  _  _ 
+|  _ \ | | | | \\ // |  \/  || ____|| || |
+| |_) || |_| |  V V  | |\/| ||  _|  |_||_|
+|_| \_\|_| |_|  |_|  |_|  |_||_____|(_)(_)
+-->
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Rhyme Finder</title>
+  <title>MW - Rhyme</title>
+  <link rel="stylesheet" href="/assets/css/root.css">
   <style>
     :root {
-      --primary: #4a6fa5;
-      --secondary: #166088;
-      --accent: #4fc1e9;
-      --light: #f8f9fa;
-      --dark: #343a40;
-      --success: #28a745;
-      --warning: #ffc107;
-      --danger: #dc3545;
-      --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-      --radius: 8px;
+      --rd: 8px;
     }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-      line-height: 1.6;
-      color: var(--dark);
-      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-      min-height: 100vh;
-      padding: 2rem;
+      background: var(--t4);
     }
+    main { padding: 5rem 1rem;min-height: 100vh;}
     .container {
       max-width: 1200px;
       margin: 0 auto;
-      background: white;
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
+      background: var(--sh3);
+      border-radius: var(--rd);
+      box-shadow:0 4px 6px rgba(0, 0, 0, 0.1);
       overflow: hidden;
     }
     .head {
-      background: var(--primary);
+      background: var(--sh2);
       color: white;
       padding: 1.5rem;
       text-align: center;
     }
     h1 { font-size: 2rem; margin-bottom: 0.5rem; }
-    .subtitle { font-size: 1rem; opacity: 0.8; }
     .search-section {
       padding: 1.5rem;
-      background-color: var(--light);
-      border-bottom: 1px solid #eee;
+      background-color: var(--sh3);
+      border-bottom: 1px solid var(--sh2);
     }
     .filters {
       margin-top: 1rem;
@@ -59,29 +56,35 @@
     }
     .filters select {
       padding: 0.5rem;
-      border: 1px solid #ccc;
-      border-radius: var(--radius);
+      border: 1px solid var(--t);
+      border-radius: var(--rd);
       font-size: 1rem;
     }
     input {
       width: 100%;
       padding: 0.75rem;
       font-size: 1rem;
-      border: 2px solid #ddd;
-      border-radius: var(--radius);
+      border: 0.5px solid var(--sh1);
+      border-radius: var(--rd);
       transition: border-color 0.3s;
+      background: var(--sh3);
+      color:var(--t);
     }
     input:focus {
       outline: none;
-      border-color: var(--accent);
+      border-color: var(--p);
     }
-    .results-section { padding: 1.5rem; }
+    .drp {
+      background:var(--sh2);
+      color:var(--t);
+    }
+    .results-section { padding: 1.5rem;color:var(--t);}
     .stats {
       display: flex;
       justify-content: space-between;
       margin-bottom: 1rem;
       font-size: 0.9rem;
-      color: #666;
+      color: var(--t2);
     }
     #results {
       list-style: none;
@@ -90,48 +93,45 @@
       gap: 10px;
     }
     .rhyme-item {
-      background: var(--light);
+      background: var(--sh3);
       padding: 0.5rem 1rem;
       border-radius: 20px;
       font-size: 1rem;
       transition: background 0.2s;
-      border: 1px solid #ddd;
+      border: 0.5px solid #ddd;
       cursor: pointer;
+      color:var(--t);
     }
-    .rhyme-item:hover { background: #e9ecef; }
+    .rhyme-item:hover { background: var(--ph); }
     .loading, .no-results {
       text-align: center;
       padding: 2rem;
-      color: #666;
+      color: var(--t2);
     }
     .spinner {
-      border: 4px solid rgba(0, 0, 0, 0.1);
+      border: 4px solid var(--sh3);
       border-radius: 50%;
-      border-top: 4px solid var(--primary);
+      border-top: 4px solid var(--t2);
       width: 40px;
       height: 40px;
       margin: 0 auto 1rem;
       animation: spin 1s linear infinite;
     }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-    @media (max-width: 768px) {
-      body { padding: 1rem; }
-      input, .filters select { font-size: 0.9rem; }
-    }
   </style>
 </head>
 <body>
+  <main>
   <div class="container">
     <div class="head">
-      <h1>Rhyme Finder</h1>
-      <div class="subtitle">Find rhymes for any word</div>
+      <h1>Live Rhyme</h1>
     </div>
     <section class="search-section">
       <input id="wordInput" type="text" placeholder="Enter a word..." autocomplete="off"
              aria-label="Word to find rhymes for" />
       <div class="filters">
         <label for="sortSelect">Sort by:</label>
-        <select id="sortSelect">
+        <select id="sortSelect" class="drp">
           <option value="alpha-asc">Alphabetical A→Z</option>
           <option value="alpha-desc">Alphabetical Z→A</option>
           <option value="syllables-asc">Syllables ↑</option>
@@ -270,5 +270,6 @@
     sortSelect.addEventListener('change', onSearch);
     window.addEventListener('DOMContentLoaded', loadDict);
   </script>
+  </main>
 </body>
 </html>
