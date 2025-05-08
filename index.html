@@ -11,171 +11,28 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>MW - Rhyme</title>
+  <title>MW</title>
+  <meta charset="UTF-8">
+  <meta name="description" content="live rhyming app with mic capabilities">
+  <meta name="language" content="English">
+  <meta name="author" content="github.com/composedbymax">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#000000">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <link rel="apple-touch-icon" href="/assets/img/icon-192.png">
+  <link rel="icon" href="/favicon.ico" type="image/x-icon">
+  <meta name="robots" content="index, nofollow">
+  <meta name="referrer" content="no-referrer">
+  <meta http-equiv="Strict-Transport-Security" content="max-age=31536000; includeSubDomains; preload">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'none'; media-src 'self'; frame-src 'self'; form-action 'self'; child-src 'self'; worker-src 'self'; manifest-src 'self';">
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
+  <meta http-equiv="Permissions-Policy" content="geolocation=(), microphone=(self), camera=()">
+  <meta http-equiv="X-XSS-Protection" content="1; mode=block">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <link rel="stylesheet" href="/assets/css/root.css">
-  <style>
-    :root {
-      --rd: 8px;
-    }
-    body {
-      background: var(--t4);
-    }
-    main { padding: 5rem 1rem;min-height: 100vh;}
-    .container {
-      max-width: 1200px;
-      margin: 0 auto;
-      background: var(--sh3);
-      border-radius: var(--rd);
-      box-shadow:0 4px 6px rgba(0, 0, 0, 0.1);
-      overflow: hidden;
-    }
-    .head {
-      background: var(--sh2);
-      color: white;
-      padding: 1.5rem;
-      text-align: center;
-    }
-    h1 { font-size: 2rem; margin-bottom: 0.5rem; }
-    .search-section {
-      padding: 1.5rem;
-      background-color: var(--sh3);
-      border-bottom: 1px solid var(--sh2);
-    }
-    .search-container {
-      display: flex;
-      gap: 0.5rem;
-      align-items: center;
-      width: 100%;
-    }
-    .filters {
-      margin-top: 1rem;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-    .filters label {
-      font-size: 0.9rem;
-      color: #555;
-    }
-    .filters select {
-      padding: 0.5rem;
-      border: 1px solid var(--t);
-      border-radius: var(--rd);
-      font-size: 1rem;
-    }
-    input {
-      width: 100%;
-      padding: 0.75rem;
-      font-size: 1rem;
-      border: 0.5px solid var(--sh1);
-      border-radius: var(--rd);
-      transition: border-color 0.3s;
-      background: var(--sh3);
-      color:var(--t);
-    }
-    input:focus {
-      outline: none;
-      border-color: var(--p);
-    }
-    .drp {
-      background:var(--sh2);
-      color:var(--t);
-    }
-    .results-section { padding: 1.5rem;color:var(--t);}
-    .stats {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 1rem;
-      font-size: 0.9rem;
-      color: var(--t2);
-    }
-    #results {
-      list-style: none;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-    }
-    .rhyme-item {
-      position: relative;
-      background: var(--sh3);
-      padding: 0.5rem 1rem;
-      border-radius: 20px;
-      font-size: 1rem;
-      transition: background 0.2s;
-      border: 0.5px solid #ddd;
-      cursor: pointer;
-      color:var(--t);
-    }
-    .rhyme-item:hover { background: var(--ph); }
-    .rhyme-item .tooltip {
-      position: absolute;
-      top: -1.5rem;
-      left: 50%;
-      transform: translateX(-50%);
-      background: var(--sh2);
-      color: white;
-      padding: 0.2rem 0.5rem;
-      border-radius: 4px;
-      font-size: 0.8rem;
-      opacity: 0;
-      transition: opacity 0.2s;
-      pointer-events: none;
-    }
-    .rhyme-item.show-tooltip .tooltip {
-      opacity: 1;
-    }
-    .loading, .no-results {
-      text-align: center;
-      padding: 2rem;
-      color: var(--t2);
-    }
-    .spinner {
-      border: 4px solid var(--sh3);
-      border-radius: 50%;
-      border-top: 4px solid var(--t2);
-      width: 40px;
-      height: 40px;
-      margin: 0 auto 1rem;
-      animation: spin 1s linear infinite;
-    }
-    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-    .mic-button {
-      background: var(--sh2);
-      color: white;
-      border: none;
-      border-radius: var(--rd);
-      padding: 0.75rem 1rem;
-      cursor: pointer;
-      transition: background-color 0.2s;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .mic-button:hover {
-      background: var(--p);
-    }
-    .mic-button.listening {
-      background: #e74c3c;
-      animation: pulse 2s infinite;
-    }
-    .mic-button svg {
-      width: 20px;
-      height: 20px;
-    }
-    .mic-status {
-      font-size: 0.8rem;
-      color: var(--t2);
-      margin-top: 0.5rem;
-      text-align: right;
-    }
-    @keyframes pulse {
-      0% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.7); }
-      70% { box-shadow: 0 0 0 10px rgba(231, 76, 60, 0); }
-      100% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0); }
-    }
-  </style>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <main>
@@ -198,7 +55,7 @@
       </div>
       <div class="mic-status" id="micStatus"></div>
       <div class="filters">
-        <label for="sortSelect">Sort by:</label>
+        <label for="sortSelect">Filter by:</label>
         <select id="sortSelect" class="drp">
           <option value="alpha-asc">Alphabetical A→Z</option>
           <option value="alpha-desc">Alphabetical Z→A</option>
@@ -225,206 +82,7 @@
       </div>
     </section>
   </div>
-  <script>
-    const wordInput      = document.getElementById('wordInput');
-    const sortSelect     = document.getElementById('sortSelect');
-    const resultsEl      = document.getElementById('results');
-    const searchedWordEl = document.getElementById('searchedWord');
-    const resultCountEl  = document.getElementById('resultCount');
-    const syllableInfoEl = document.getElementById('syllableInfo');
-    const loadingSection = document.getElementById('loadingSection');
-    const resultsSection = document.getElementById('resultsSection');
-    const noResultsEl    = document.getElementById('noResults');
-    const micButton      = document.getElementById('micButton');
-    const micStatus      = document.getElementById('micStatus');
-    const limit          = 1000;
-    let dict = {}, rhymesMap = { exact: {}, relaxed: {} }, syllableCounts = {};
-    let recognition;
-    let isListening = false;
-    function initSpeechRecognition() {
-      if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-        micButton.disabled = true;
-        micStatus.textContent = 'Speech recognition not supported in your browser';
-        return false;
-      }
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      recognition = new SpeechRecognition();
-      recognition.continuous = true;
-      recognition.interimResults = true;
-      recognition.lang = 'en-US';
-      recognition.onstart = () => {
-        isListening = true;
-        micButton.classList.add('listening');
-        micStatus.textContent = 'Listening...';
-      };
-      recognition.onend = () => {
-        if (isListening) {
-          recognition.start();
-        }
-      };
-      recognition.onerror = (event) => {
-        console.error('Speech recognition error', event.error);
-        micStatus.textContent = `Error: ${event.error}`;
-        if (event.error === 'not-allowed') {
-          stopListening();
-        }
-      };
-      recognition.onresult = (event) => {
-        const result = event.results[event.results.length - 1];
-        if (result.isFinal) {
-          const word = result[0].transcript.trim().split(' ').pop();
-          if (word) {
-            wordInput.value = word;
-            onSearch();
-          }
-        }
-      };
-      return true;
-    }
-    function toggleListening() {
-      if (!recognition && !initSpeechRecognition()) {
-        return;
-      }
-      if (isListening) {
-        stopListening();
-      } else {
-        startListening();
-      }
-    }
-    function startListening() {
-      try {
-        recognition.start();
-        isListening = true;
-      } catch (err) {
-        console.error('Failed to start speech recognition', err);
-        micStatus.textContent = 'Failed to start listening';
-      }
-    }
-    function stopListening() {
-      if (recognition) {
-        recognition.stop();
-      }
-      isListening = false;
-      micButton.classList.remove('listening');
-      micStatus.textContent = '';
-    }
-    function loadDict() {
-      loadingSection.style.display = 'block';
-      fetch('dict.txt')
-        .then(res => res.ok ? res.text() : Promise.reject(res.status))
-        .then(text => {
-          text.split(/\r?\n/).forEach(line => {
-            if (!line || line.startsWith(';;;')) return;
-            const [w, ph] = line.split('  ');
-            if (!ph) return;
-            dict[w] = ph.trim().split(' ');
-            syllableCounts[w] = dict[w].filter(p => p.match(/[AEIOU].*[012]/)).length;
-          });
-          buildRhymesMap();
-          loadingSection.style.display = 'none';
-        })
-        .catch(err => {
-          console.error(err);
-          loadingSection.style.display = 'none';
-          alert('Failed to load dictionary.');
-        });
-    }
-    function getKey(ph, exact) {
-      let idx = ph.length - 1;
-      while (idx >= 0 && !ph[idx].match(/[AEIOU].*[12]/)) idx--;
-      if (idx < 0) idx = ph.findIndex(p => p.match(/[AEIOU]/));
-      if (idx < 0) return ph.join(' ');
-      return exact
-        ? ph.slice(idx).join(' ')
-        : ph.slice(-3).map(p => p.replace(/[0-9]/g, '')).join(' ');
-    }
-    function buildRhymesMap() {
-      Object.entries(dict).forEach(([w, ph]) => {
-        if (w.match(/[^A-Z']/)) return;
-        ['exact','relaxed'].forEach(type => {
-          const key = getKey(ph, type === 'exact');
-          (rhymesMap[type][key] = rhymesMap[type][key]||[]).push(w);
-        });
-      });
-    }
-    function findRhymes(word) {
-      const up = word.toUpperCase();
-      if (!dict[up]) return [];
-      const ph = dict[up];
-      const perfect = new Set(rhymesMap.exact[getKey(ph,true)]||[]);
-      const near    = new Set(rhymesMap.relaxed[getKey(ph,false)]||[]);
-      const both = [
-        ...[...perfect].filter(w => w !== up),
-        ...[...near].filter(w => !perfect.has(w) && w !== up)
-      ];
-      return both.slice(0, limit);
-    }
-    function sortRhymes(list, sortType) {
-      switch(sortType) {
-        case 'alpha-asc':
-          return [...list].sort();
-        case 'alpha-desc':
-          return [...list].sort().reverse();
-        case 'syllables-asc':
-          return [...list].sort((a,b) => (syllableCounts[a]||0) - (syllableCounts[b]||0));
-        case 'syllables-desc':
-          return [...list].sort((a,b) => (syllableCounts[b]||0) - (syllableCounts[a]||0));
-        default:
-          return list;
-      }
-    }
-    function showResults(list, word) {
-      resultsEl.innerHTML = '';
-      if (!list.length) {
-        noResultsEl.style.display = 'block';
-        resultCountEl.textContent = '0 rhymes found';
-        syllableInfoEl.textContent = (syllableCounts[word.toUpperCase()]||'') + (syllableCounts[word.toUpperCase()]?' syllables':'');
-        return;
-      }
-      noResultsEl.style.display = 'none';
-      list.forEach(r => {
-        const li = document.createElement('li');
-        li.className = 'rhyme-item';
-        li.textContent = r.toLowerCase();
-        // append tooltip span
-        const tip = document.createElement('span');
-        tip.className = 'tooltip';
-        tip.textContent = 'Copied!';
-        li.appendChild(tip);
-        li.onclick = async () => {
-          try {
-            await navigator.clipboard.writeText(r.toLowerCase());
-            li.classList.add('show-tooltip');
-            setTimeout(() => li.classList.remove('show-tooltip'), 800);
-          } catch(err) {
-            console.error('Copy failed', err);
-          }
-        };
-        resultsEl.appendChild(li);
-      });
-      resultCountEl.textContent = `${list.length} rhymes found`;
-      syllableInfoEl.textContent = `${syllableCounts[word.toUpperCase()]} syllables`;
-    }
-    function onSearch() {
-      const w = wordInput.value.trim();
-      if (!w) {
-        resultsSection.style.display = 'none';
-        return;
-      }
-      searchedWordEl.textContent = w;
-      resultsSection.style.display = 'block';
-      let rhymes = findRhymes(w);
-      rhymes = sortRhymes(rhymes, sortSelect.value);
-      showResults(rhymes, w);
-    }
-    micButton.addEventListener('click', toggleListening);
-    wordInput.addEventListener('input', onSearch);
-    sortSelect.addEventListener('change', onSearch);
-    window.addEventListener('DOMContentLoaded', () => {
-      loadDict();
-      initSpeechRecognition();
-    });
-  </script>
+  <script src="script.js" nonce="<?php echo $_SESSION['nonce']; ?>"></script>
   </main>
 </body>
 </html>
