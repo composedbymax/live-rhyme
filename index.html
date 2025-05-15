@@ -1,88 +1,110 @@
-<!--
- _      ___ __     __ _____ 
-| |    |_ _|\ \   / /| ____|
-| |___  | |  \ \ / / |  _|  
-|_____||___|  \_\_/  |_____|
- ____   _   _ __   __ __  __  _____  _  _ 
-|  _ \ | | | | \\ // |  \/  || ____|| || |
-| |_) || |_| |  V V  | |\/| ||  _|  |_||_|
-|_| \_\|_| |_|  |_|  |_|  |_||_____|(_)(_)
--->
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <title>MW</title>
-  <meta charset="UTF-8">
-  <meta name="description" content="live rhyming app with mic capabilities">
-  <meta name="language" content="English">
-  <meta name="author" content="github.com/composedbymax">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#000000">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <link rel="apple-touch-icon" href="/assets/img/icon-192.png">
-  <link rel="icon" href="/favicon.ico" type="image/x-icon">
-  <meta name="robots" content="index, nofollow">
-  <meta name="referrer" content="no-referrer">
-  <meta http-equiv="Strict-Transport-Security" content="max-age=31536000; includeSubDomains; preload">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'none'; media-src 'self'; frame-src 'self'; form-action 'self'; child-src 'self'; worker-src 'self'; manifest-src 'self';">
-  <meta http-equiv="X-Content-Type-Options" content="nosniff">
-  <meta http-equiv="Permissions-Policy" content="geolocation=(), microphone=(self), camera=()">
-  <meta http-equiv="X-XSS-Protection" content="1; mode=block">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <link rel="stylesheet" href="/assets/css/root.css">
-  <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Rhyme Finder</title>
+  <style>
+    body { font-family: sans-serif; background: #111; color: #eee; padding: 2rem; }
+    select, input { margin: 0.5rem; padding: 0.5rem; background: #222; color: #eee; border: 1px solid #555; }
+    ul { list-style: none; padding: 0; }
+    li { margin: 0.2rem 0; }
+  </style>
 </head>
 <body>
-  <main>
-  <div class="container">
-    <div class="head">
-      <h1>Live Rhyme</h1>
-    </div>
-    <section class="search-section">
-      <div class="search-container">
-        <input id="wordInput" type="text" placeholder="Enter a word..." autocomplete="off"
-               aria-label="Word to find rhymes for" />
-        <button id="micButton" class="mic-button" aria-label="Activate speech recognition">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
-            <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
-            <line x1="12" y1="19" x2="12" y2="23"></line>
-            <line x1="8" y1="23" x2="16" y2="23"></line>
-          </svg>
-        </button>
-      </div>
-      <div class="mic-status" id="micStatus"></div>
-      <div class="filters">
-        <label for="sortSelect">Filter by:</label>
-        <select id="sortSelect" class="drp">
-          <option value="alpha-asc">Alphabetical A→Z</option>
-          <option value="alpha-desc">Alphabetical Z→A</option>
-          <option value="syllables-asc">Syllables ↑</option>
-          <option value="syllables-desc">Syllables ↓</option>
-        </select>
-      </div>
-    </section>
-    <section id="loadingSection" class="loading" style="display:none;">
-      <div class="spinner"></div>
-      <div>Loading dictionary...</div>
-    </section>
-    <section id="resultsSection" class="results-section" style="display:none;">
-      <h2 id="resultHeader">
-        Rhymes for "<span id="searchedWord"></span>"
-      </h2>
-      <div class="stats">
-        <span id="resultCount"></span>
-        <span id="syllableInfo"></span>
-      </div>
-      <ul id="results"></ul>
-      <div id="noResults" class="no-results" style="display:none;">
-        <p>No rhymes found. Try another word?</p>
-      </div>
-    </section>
-  </div>
-  <script src="script.js" nonce="<?php echo $_SESSION['nonce']; ?>"></script>
-  </main>
+  <h1>Rhyme Generator</h1>
+  <p id="status">Loading phonetic dictionary...</p>
+  <input type="text" id="inputWord" placeholder="Enter a word" />
+  <select id="rhymeType">
+    <option value="perfect">Perfect Rhyme</option>
+    <option value="assonance">Assonance</option>
+    <option value="slant">Slant Rhyme</option>
+    <option value="pararhyme">Pararhyme</option>
+    <option value="multisyllabic">Multisyllabic Rhyme</option>
+    <option value="eye">Eye Rhyme</option>
+  </select>
+  <button onclick="search()">Find Rhymes</button>
+  <div id="results"></div>
+  <script>
+    let cmu = {};
+    let wordList = [];
+    async function loadCMU() {
+      const res = await fetch("cmudict.json");
+      cmu = await res.json();
+      wordList = Object.keys(cmu);
+      document.getElementById("status").innerText = "Phonetic dictionary loaded.";
+    }
+    function countSyllables(pronunciation) {
+      return (pronunciation.match(/[0-2]/g) || []).length;
+    }
+    function getRhymePart(pronunciation) {
+      const phones = pronunciation.trim().split(" ");
+      for (let i = phones.length - 1; i >= 0; i--) {
+        if (phones[i].match(/\d/)) {
+          return phones.slice(i).join(" ");
+        }
+      }
+      return phones.join(" ");
+    }
+    function getAssonance(pronunciation) {
+      return pronunciation.match(/[AEIOU][A-Z]*[0-2]?/g) || [];
+    }
+    function normalizeWord(word) {
+      return word.toUpperCase().replace(/[^A-Z]/g, '');
+    }
+    function matchRhyme(word, type) {
+        word = normalizeWord(word);
+        const results = [];
+        if (!cmu[word]) return results;
+        const targetPronunciations = Array.isArray(cmu[word]) ? cmu[word] : [cmu[word]];
+        wordList.forEach(candidate => {
+            if (candidate === word) return;
+            const candidateProns = Array.isArray(cmu[candidate]) ? cmu[candidate] : [cmu[candidate]];
+            candidateProns.forEach(pron => {
+            targetPronunciations.forEach(targetPron => {
+                let match = false;
+                if (type === "perfect") {
+                match = getRhymePart(pron) === getRhymePart(targetPron);
+                } else if (type === "assonance") {
+                const a1 = getAssonance(pron).join("-");
+                const a2 = getAssonance(targetPron).join("-");
+                match = a1 === a2;
+                } else if (type === "slant") {
+                const rhyme1 = getRhymePart(pron).replace(/\d/g, '');
+                const rhyme2 = getRhymePart(targetPron).replace(/\d/g, '');
+                match = rhyme1 === rhyme2;
+                } else if (type === "pararhyme") {
+                const cons1 = pron.replace(/[AEIOU][A-Z]*[0-2]?/g, "");
+                const cons2 = targetPron.replace(/[AEIOU][A-Z]*[0-2]?/g, "");
+                match = cons1 === cons2;
+                } else if (type === "multisyllabic") {
+                match = getRhymePart(pron) === getRhymePart(targetPron) &&
+                        countSyllables(pron) > 1;
+                } else if (type === "eye") {
+                match = candidate.slice(-3) === word.slice(-3);
+                }
+                if (match) {
+                results.push({
+                    word: candidate,
+                    syllables: countSyllables(pron)
+                });
+                }
+            });
+            });
+        });
+        results.sort((a, b) => a.syllables - b.syllables);
+        return results;
+        }
+    function search() {
+      const word = document.getElementById("inputWord").value;
+      const type = document.getElementById("rhymeType").value;
+      const output = document.getElementById("results");
+      const matches = matchRhyme(word, type);
+      output.innerHTML = `<h3>${matches.length} matches found</h3><ul>` +
+        matches.map(m => `<li>${m.word.toLowerCase()} (${m.syllables} syllables)</li>`).join("") +
+        "</ul>";
+    }
+    window.onload = loadCMU;
+  </script>
 </body>
 </html>
