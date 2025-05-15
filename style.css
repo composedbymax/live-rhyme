@@ -1,0 +1,21 @@
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#1e1e1e;--bg-light:rgba(0,0,0,0.2);--accent:#24deeb;--red:#e45a33;--text:#c7c7c7;--text-dark:#000}
+body{background:#2d2d2d;font-family:system-ui, sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;padding:1rem}
+#app{background:var(--bg-light);color:var(--text);border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.5);width:100%;max-width:1200px;padding:2rem;transition:min-height 0.3s}
+#app.expanded{min-height:92vh}
+h1{text-align:center;margin-bottom:1rem;font-weight:400;color:var(--accent)}
+#status{text-align:center;color:var(--text);font-size:0.9rem;margin-bottom:1.5rem}
+#controls{display:flex;align-items:center;flex-wrap:wrap;gap:1rem;justify-content:center;margin-bottom:2rem}
+#inputWord{flex:1 1 200px;padding:0.8rem;background:var(--bg);border:1px solid var(--accent);border-radius:6px;color:var(--text);font-size:1rem}
+#micBtn{background:var(--red);border:none;border-radius:12px;cursor:pointer;outline:none;display:flex;align-items:center;justify-content:center;width:1.9rem;height:2.4rem}
+.types{display:grid;grid-template-columns:repeat(auto-fit, minmax(120px, 1fr));gap:0.5rem;flex:1 1 300px}
+.types label{display:flex;align-items:center;background:var(--bg);padding:0.5rem;border-radius:6px;cursor:pointer;user-select:none;font-size:0.9rem}
+.types input{margin-right:0.5rem;accent-color:var(--accent)}
+#results{display:grid;grid-template-columns:repeat(auto-fit, minmax(140px, 1fr));gap:1rem}
+.rhyme-col{background:var(--bg);border-radius:6px;padding:0.8rem;display:flex;flex-direction:column;max-height:60vh;overflow-y:auto}
+.rhyme-col h2{margin-bottom:0.5rem;font-size:1rem;color:var(--accent);text-transform:capitalize;text-align:center}
+.words{display:flex;flex-direction:column;gap:0.4rem}
+.word{background:var(--text-dark);padding:0.4rem 0.6rem;border-radius:4px;cursor:pointer;font-size:0.85rem;transition:background 0.2s, color 0.2s;color:var(--text)}
+.word:hover{background:var(--accent);color:var(--text-dark)}
+#banner{position:fixed;top:1rem;left:50%;transform:translateX(-50%);background:var(--accent);color:var(--text-dark);padding:0.6rem 1rem;border-radius:4px;opacity:0;pointer-events:none;transition:opacity 0.3s;font-size:0.9rem;z-index:100}
+#banner.show{opacity:1}
