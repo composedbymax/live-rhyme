@@ -5,105 +5,197 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Rhyme Finder</title>
   <style>
-    body { font-family: sans-serif; background: #111; color: #eee; padding: 2rem; }
-    select, input { margin: 0.5rem; padding: 0.5rem; background: #222; color: #eee; border: 1px solid #555; }
-    ul { list-style: none; padding: 0; }
-    li { margin: 0.2rem 0; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { 
+      display: flex; 
+      flex-direction: column; 
+      align-items: center; 
+      font-family: system-ui, sans-serif; 
+      background: #121212; 
+      color: #ddd; 
+      min-height: 100vh; 
+      padding: 2rem; 
+    }
+    h1 { margin-bottom: 1rem; font-weight: 400; }
+    .controls {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 0.5rem;
+      align-items: center;
+      max-width: 600px;
+      margin-bottom: 1.5rem;
+      width: 100%;
+    }
+    .controls input[type="text"] {
+      width: 100%;
+      padding: 0.6rem;
+      border: 1px solid #333;
+      border-radius: 4px;
+      background: #1e1e1e;
+      color: #eee;
+      font-size: 1rem;
+    }
+    .types {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+      justify-content: center;
+    }
+    .types label {
+      background: #1e1e1e;
+      padding: 0.4rem 0.6rem;
+      border-radius: 4px;
+      cursor: pointer;
+      user-select: none;
+      font-size: 0.9rem;
+    }
+    .types input {
+      margin-right: 0.3rem;
+      accent-color: #0af;
+    }
+    .controls button {
+      padding: 0.6rem 1rem;
+      border: none;
+      border-radius: 4px;
+      background: #0af;
+      color: #121212;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .controls button:hover {
+      background: #08c;
+    }
+    table {
+      width: 100%;
+      max-width: 600px;
+      border-collapse: collapse;
+      margin-top: 1rem;
+    }
+    thead {
+      background: #1e1e1e;
+    }
+    th, td {
+      padding: 0.6rem;
+      text-align: left;
+      border-bottom: 1px solid #333;
+    }
+    tbody tr:nth-child(odd) {
+      background: #181818;
+    }
+    #status {
+      margin-bottom: 1rem;
+      font-size: 0.9rem;
+      color: #888;
+    }
+    @media (max-width: 480px) {
+      .types { flex-direction: column; align-items: center; }
+    }
   </style>
 </head>
 <body>
-  <h1>Rhyme Generator</h1>
-  <p id="status">Loading phonetic dictionary...</p>
-  <input type="text" id="inputWord" placeholder="Enter a word" />
-  <select id="rhymeType">
-    <option value="perfect">Perfect Rhyme</option>
-    <option value="assonance">Assonance</option>
-    <option value="slant">Slant Rhyme</option>
-    <option value="pararhyme">Pararhyme</option>
-    <option value="multisyllabic">Multisyllabic Rhyme</option>
-    <option value="eye">Eye Rhyme</option>
-  </select>
-  <button onclick="search()">Find Rhymes</button>
+  <h1>Rhyme Finder</h1>
+  <p id="status">Loading phonetic dictionary…</p>
+  <div class="controls">
+    <input type="text" id="inputWord" placeholder="Enter a word…" />
+    <button id="go">Find</button>
+  </div>
+  <div class="types">
+    <label><input type="checkbox" value="perfect" checked> Perfect</label>
+    <label><input type="checkbox" value="assonance" checked> Assonance</label>
+    <label><input type="checkbox" value="slant" checked> Slant</label>
+    <label><input type="checkbox" value="pararhyme" checked> Pararhyme</label>
+    <label><input type="checkbox" value="multisyllabic" checked> Multisyllabic</label>
+    <label><input type="checkbox" value="eye" checked> Eye</label>
+  </div>
   <div id="results"></div>
   <script>
-    let cmu = {};
-    let wordList = [];
+    let cmu = {}, wordList = [];
     async function loadCMU() {
       const res = await fetch("cmudict.json");
       cmu = await res.json();
+      for (let w in cmu) {
+        if (!Array.isArray(cmu[w])) cmu[w] = [cmu[w]];
+      }
       wordList = Object.keys(cmu);
-      document.getElementById("status").innerText = "Phonetic dictionary loaded.";
+      document.getElementById("status").innerText = "Dictionary loaded.";
     }
-    function countSyllables(pronunciation) {
-      return (pronunciation.match(/[0-2]/g) || []).length;
+    function countSyllables(p) {
+      return (p.match(/[0-2]/g)||[]).length;
     }
-    function getRhymePart(pronunciation) {
-      const phones = pronunciation.trim().split(" ");
-      for (let i = phones.length - 1; i >= 0; i--) {
-        if (phones[i].match(/\d/)) {
-          return phones.slice(i).join(" ");
-        }
+    function getRhymePart(p) {
+      const phones = p.split(" ");
+      for (let i=phones.length-1; i>=0; i--) {
+        if (phones[i].match(/\d/)) return phones.slice(i).join(" ");
       }
       return phones.join(" ");
     }
-    function getAssonance(pronunciation) {
-      return pronunciation.match(/[AEIOU][A-Z]*[0-2]?/g) || [];
+    function getAssonance(p) {
+      return p.match(/[AEIOU][A-Z]*[0-2]?/g)||[];
     }
-    function normalizeWord(word) {
-      return word.toUpperCase().replace(/[^A-Z]/g, '');
+    function normalize(w) {
+      return w.toUpperCase().replace(/[^A-Z]/g, "");
     }
     function matchRhyme(word, type) {
-        word = normalizeWord(word);
-        const results = [];
-        if (!cmu[word]) return results;
-        const targetPronunciations = Array.isArray(cmu[word]) ? cmu[word] : [cmu[word]];
-        wordList.forEach(candidate => {
-            if (candidate === word) return;
-            const candidateProns = Array.isArray(cmu[candidate]) ? cmu[candidate] : [cmu[candidate]];
-            candidateProns.forEach(pron => {
-            targetPronunciations.forEach(targetPron => {
-                let match = false;
-                if (type === "perfect") {
-                match = getRhymePart(pron) === getRhymePart(targetPron);
-                } else if (type === "assonance") {
-                const a1 = getAssonance(pron).join("-");
-                const a2 = getAssonance(targetPron).join("-");
-                match = a1 === a2;
-                } else if (type === "slant") {
-                const rhyme1 = getRhymePart(pron).replace(/\d/g, '');
-                const rhyme2 = getRhymePart(targetPron).replace(/\d/g, '');
-                match = rhyme1 === rhyme2;
-                } else if (type === "pararhyme") {
-                const cons1 = pron.replace(/[AEIOU][A-Z]*[0-2]?/g, "");
-                const cons2 = targetPron.replace(/[AEIOU][A-Z]*[0-2]?/g, "");
-                match = cons1 === cons2;
-                } else if (type === "multisyllabic") {
-                match = getRhymePart(pron) === getRhymePart(targetPron) &&
-                        countSyllables(pron) > 1;
-                } else if (type === "eye") {
-                match = candidate.slice(-3) === word.slice(-3);
-                }
-                if (match) {
-                results.push({
-                    word: candidate,
-                    syllables: countSyllables(pron)
-                });
-                }
-            });
-            });
+      word = normalize(word);
+      if (!cmu[word]) return [];
+      const target = cmu[word];
+      const out = [];
+      wordList.forEach(cand => {
+        if (cand === word) return;
+        cmu[cand].forEach(pron => {
+          target.forEach(tpron => {
+            let ok = false;
+            if (type==="perfect")
+              ok = getRhymePart(pron)===getRhymePart(tpron);
+            else if (type==="assonance")
+              ok = getAssonance(pron).join("")===getAssonance(tpron).join("");
+            else if (type==="slant")
+              ok = getRhymePart(pron).replace(/\d/g,"")===getRhymePart(tpron).replace(/\d/g,"");
+            else if (type==="pararhyme")
+              ok = pron.replace(/[AEIOU][A-Z]*[0-2]?/g,"")===tpron.replace(/[AEIOU][A-Z]*[0-2]?/g,"");
+            else if (type==="multisyllabic")
+              ok = getRhymePart(pron)===getRhymePart(tpron) && countSyllables(pron)>1;
+            else if (type==="eye")
+              ok = cand.slice(-3)===word.slice(-3);
+            if (ok) out.push({ word: cand, syl: countSyllables(pron), type });
+          });
         });
-        results.sort((a, b) => a.syllables - b.syllables);
-        return results;
-        }
-    function search() {
-      const word = document.getElementById("inputWord").value;
-      const type = document.getElementById("rhymeType").value;
-      const output = document.getElementById("results");
-      const matches = matchRhyme(word, type);
-      output.innerHTML = `<h3>${matches.length} matches found</h3><ul>` +
-        matches.map(m => `<li>${m.word.toLowerCase()} (${m.syllables} syllables)</li>`).join("") +
-        "</ul>";
+      });
+      return out;
     }
+    function renderTable(rows) {
+      if (!rows.length) {
+        return `<p>No matches found.</p>`;
+      }
+      rows.sort((a,b)=> a.syl - b.syl || a.type.localeCompare(b.type));
+      let html = `<table>
+        <thead><tr>
+          <th>Word</th><th>Syllables</th><th>Type</th>
+        </tr></thead><tbody>`;
+      rows.forEach(r=>{
+        html += `<tr>
+          <td>${r.word.toLowerCase()}</td>
+          <td>${r.syl}</td>
+          <td>${r.type}</td>
+        </tr>`;
+      });
+      html += `</tbody></table>`;
+      return html;
+    }
+    document.getElementById("go").onclick = ()=>{
+      const w = document.getElementById("inputWord").value.trim();
+      if (!w) return;
+      const checked = Array.from(document.querySelectorAll(".types input:checked"))
+                          .map(i=>i.value);
+      let all = [];
+      checked.forEach(type=>{
+        all = all.concat(matchRhyme(w, type));
+      });
+      document.getElementById("results").innerHTML =
+        `<h3>${all.length} matches</h3>` + renderTable(all);
+    };
     window.onload = loadCMU;
   </script>
 </body>
