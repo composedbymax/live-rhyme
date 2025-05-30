@@ -47,7 +47,7 @@ function matchRhyme(word, type) {
                 countSyllables(pron) > 1;
         else if (type === "eye")
             ok = cand.slice(-3) === word.slice(-3);
-        if (ok) out.push({ word: cand, syl: countSyllables(pron), type });
+        if (ok) out.push({ word: cand.replace(/\(\d+\)$/, "").toLowerCase(), syl: countSyllables(pron), type });
         });
     });
     });
@@ -56,7 +56,7 @@ function matchRhyme(word, type) {
 function dedupe(rows) {
     const map = {};
     rows.forEach(r => {
-    const w = r.word.replace(/\(\d+\)$/, "").toLowerCase();
+    const w = r.word;
     const key = w + "|" + r.type;
     if (!map[key] || r.syl < map[key].syl) {
         map[key] = { word: w, syl: r.syl, type: r.type };
@@ -81,7 +81,7 @@ function renderResults(rows, types) {
     group.sort((a,b) => a.syl - b.syl).forEach(r => {
         const btn = document.createElement("div");
         btn.className = "word";
-        btn.textContent = `${r.word} (${r.syl})`;
+        btn.textContent = r.word; // Changed: removed syllable count display
         btn.onclick = () => copyWord(r.word);
         wordsEl.appendChild(btn);
     });
@@ -91,7 +91,7 @@ function renderResults(rows, types) {
 function copyWord(w) {
     navigator.clipboard.writeText(w);
     const b = document.getElementById("banner");
-    b.textContent = `Copied “${w}”`;
+    b.textContent = `Copied "${w}"`;
     b.classList.add("show");
     setTimeout(() => b.classList.remove("show"), 1200);
 }

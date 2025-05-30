@@ -43,6 +43,6 @@
   </div>
   <div id="banner"></div>
   <script src="script.js"></script>
-  <script>"serviceWorker"in navigator&&window.addEventListener("load",(()=>{navigator.serviceWorker.register("/rhyme/service-worker.js",{scope:"/rhyme/"}).then((e=>console.log("SW registered @",e.scope))).catch((e=>console.error("SW failed:",e)))}));</script>
+  <script>"serviceWorker"in navigator&&window.addEventListener("load",(()=>{navigator.serviceWorker.register("/rhyme/service-worker.js",{scope:"/"}).then((e=>console.log("SW registered @",e.scope))).catch((e=>console.error("SW failed:",e)))}));</script>
 </body>
 </html>
