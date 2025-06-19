@@ -21,3 +21,4 @@ h1{text-align:center;margin-bottom:1rem;font-weight:400;color:var(--accent)}
 .word:hover{background:var(--accent);color:var(--text-dark)}
 #banner{position:fixed;top:1rem;left:50%;transform:translateX(-50%);background:var(--accent);color:var(--text-dark);padding:0.6rem 1rem;border-radius:4px;opacity:0;pointer-events:none;transition:opacity 0.3s;font-size:0.9rem;z-index:100}
 #banner.show{opacity:1}
+.loading{opacity:0.7;pointer-events:none}
