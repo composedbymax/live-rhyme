@@ -13,7 +13,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Rhyme Finder with Speech</title>
+  <title>Rhyme Finder</title>
+  <script>"serviceWorker"in navigator&&navigator.serviceWorker.register("/live/sw.js",{scope:"/live/"});</script>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -22,13 +23,15 @@
     <p id="status">Loading phonetic dictionary…</p>
     <div id="controls">
       <input type="text" id="inputWord" name="word" placeholder="Enter a word…" autocomplete="off" />
+      <input type="text" id="inputWord1" name="word1" placeholder="Enter first word…" autocomplete="off" style="display: none;" />
+      <input type="text" id="inputWord2" name="word2" placeholder="Enter second word…" autocomplete="off" style="display: none;" />
       <button id="micBtn" title="Toggle speech recognition">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
-            <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
-            <line x1="12" y1="19" x2="12" y2="23"></line>
-            <line x1="8" y1="23" x2="16" y2="23"></line>
-          </svg>
+          <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+          <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+          <line x1="12" y1="19" x2="12" y2="23"></line>
+          <line x1="8" y1="23" x2="16" y2="23"></line>
+        </svg>
       </button>
       <div class="toggle-container">
         <input type="checkbox" id="twoWordToggle" />
@@ -47,6 +50,5 @@
   </div>
   <div id="banner"></div>
   <script src="script.js"></script>
-  <script>"serviceWorker"in navigator&&window.addEventListener("load",(()=>{navigator.serviceWorker.register("/rhyme/service-worker.js",{scope:"/"}).then((e=>console.log("SW registered @",e.scope))).catch((e=>console.error("SW failed:",e)))}));</script>
 </body>
 </html>
